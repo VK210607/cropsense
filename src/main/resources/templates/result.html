@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>CropSense — Result</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f0f7e6; display: flex; justify-content: center; padding: 40px; }
+        .card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 500px; text-align: center; }
+        h1 { color: #2d6a4f; }
+        .crop-name { font-size: 48px; font-weight: bold; color: #1b4332; margin: 20px 0; }
+        .confidence { color: #52b788; font-size: 20px; }
+        .top-crops { margin: 20px 0; text-align: left; background: #f8f9fa; padding: 15px; border-radius: 8px; }
+        .top-crops li { margin: 5px 0; color: #333; }
+        a { display: inline-block; margin-top: 25px; padding: 12px 30px; background: #2d6a4f; color: white; border-radius: 8px; text-decoration: none; }
+        a:hover { background: #1b4332; }
+        .saved { color: #888; font-size: 13px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h1>🌾 CropSense Recommendation</h1>
+
+    <p>Based on your soil and climate data:</p>
+    <div class="crop-name" th:text="${crop}">Crop</div>
+    <div class="confidence">Confidence: <strong th:text="${confidence} + '%'">0%</strong></div>
+
+    <div class="top-crops">
+        <strong>Top 3 Alternatives:</strong>
+        <ol>
+            <li th:each="c : ${topCrops}" th:text="${c}">crop</li>
+        </ol>
+    </div>
+
+    <p class="saved">✅ This prediction has been saved to the database.</p>
+
+    <a href="/">← Try Another Prediction</a>
+</div>
+</body>
+</html>
