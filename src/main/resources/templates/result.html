@@ -2,38 +2,266 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>CropSense — Result</title>
+    <title>CropSense — Recommendation Result</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #f0f7e6; display: flex; justify-content: center; padding: 40px; }
-        .card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 500px; text-align: center; }
-        h1 { color: #2d6a4f; }
-        .crop-name { font-size: 48px; font-weight: bold; color: #1b4332; margin: 20px 0; }
-        .confidence { color: #52b788; font-size: 20px; }
-        .top-crops { margin: 20px 0; text-align: left; background: #f8f9fa; padding: 15px; border-radius: 8px; }
-        .top-crops li { margin: 5px 0; color: #333; }
-        a { display: inline-block; margin-top: 25px; padding: 12px 30px; background: #2d6a4f; color: white; border-radius: 8px; text-decoration: none; }
-        a:hover { background: #1b4332; }
-        .saved { color: #888; font-size: 13px; margin-top: 10px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 50%, #40916c 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+        .topbar {
+            width: 100%;
+            max-width: 640px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .topbar a {
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .topbar a:hover { color: white; }
+        .topbar .title {
+            margin: 0 auto;
+            color: white;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 640px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        /* Result Hero */
+        .result-hero {
+            background: linear-gradient(135deg, #1b4332, #40916c);
+            color: white;
+            text-align: center;
+            padding: 40px 30px;
+        }
+        .result-hero .status-pill {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            padding: 4px 14px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            color: #d8f3dc;
+        }
+        .result-hero .crop-name {
+            font-size: 48px;
+            font-weight: 800;
+            text-transform: capitalize;
+            letter-spacing: 1px;
+        }
+        .result-hero .confidence {
+            margin-top: 8px;
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        .conf-bar-wrap {
+            background: rgba(255,255,255,0.25);
+            border-radius: 20px;
+            height: 8px;
+            margin: 14px auto 0;
+            max-width: 260px;
+        }
+        .conf-bar {
+            background: #b7e4c7;
+            border-radius: 20px;
+            height: 8px;
+        }
+
+        /* Body */
+        .card-body {
+            padding: 32px 36px;
+        }
+
+        .section-title {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #777;
+            margin-bottom: 14px;
+        }
+
+        /* Alternatives */
+        .alt-list {
+            list-style: none;
+            margin-bottom: 28px;
+        }
+        .alt-list li {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 15px;
+            color: #333;
+        }
+        .alt-list li .rank {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #e8f5e9;
+            color: #2d6a4f;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .alt-list li span {
+            text-transform: capitalize;
+            font-weight: 500;
+        }
+
+        /* Input Summary */
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 28px;
+        }
+        .input-cell {
+            background: #f8fafc;
+            border: 1px solid #edf2f7;
+            border-radius: 10px;
+            padding: 12px 10px;
+            text-align: center;
+        }
+        .input-cell .val {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1b4332;
+        }
+        .input-cell .lbl {
+            font-size: 11px;
+            color: #718096;
+            margin-top: 3px;
+        }
+
+        /* Actions */
+        .actions {
+            display: flex;
+            gap: 12px;
+        }
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-primary {
+            background: #2d6a4f;
+            color: white;
+        }
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #334155;
+        }
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .saved-note {
+            text-align: center;
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 18px;
+        }
     </style>
 </head>
 <body>
+
+<div class="topbar">
+    <a href="/">&larr; Dashboard</a>
+    <span class="title">CropSense</span>
+</div>
+
 <div class="card">
-    <h1>🌾 CropSense Recommendation</h1>
-
-    <p>Based on your soil and climate data:</p>
-    <div class="crop-name" th:text="${crop}">Crop</div>
-    <div class="confidence">Confidence: <strong th:text="${confidence} + '%'">0%</strong></div>
-
-    <div class="top-crops">
-        <strong>Top 3 Alternatives:</strong>
-        <ol>
-            <li th:each="c : ${topCrops}" th:text="${c}">crop</li>
-        </ol>
+    <!-- Result Hero -->
+    <div class="result-hero">
+        <div class="status-pill">Optimal Recommendation</div>
+        <div class="crop-name" th:text="${crop}">Crop</div>
+        <div class="confidence" th:text="${confidence} + '% Confidence Score'">0%</div>
+        <div class="conf-bar-wrap">
+            <div class="conf-bar" th:style="'width:' + ${confidence} + '%'"></div>
+        </div>
     </div>
 
-    <p class="saved">✅ This prediction has been saved to the database.</p>
+    <div class="card-body">
 
-    <a href="/">← Try Another Prediction</a>
+        <!-- Top Alternatives -->
+        <div class="section-title">Top Alternative Crops</div>
+        <ul class="alt-list">
+            <li th:each="c, i : ${topCrops}">
+                <div class="rank" th:text="${i.index + 1}">1</div>
+                <span th:text="${c}">Crop</span>
+            </li>
+        </ul>
+
+        <!-- Input Summary -->
+        <div class="section-title">Field &amp; Environmental Parameters</div>
+        <div class="input-grid">
+            <div class="input-cell">
+                <div class="val" th:text="${soilColorLabel}">—</div>
+                <div class="lbl">Soil Colour</div>
+            </div>
+            <div class="input-cell">
+                <div class="val" th:text="${soilTypeLabel}">—</div>
+                <div class="lbl">Soil Type</div>
+            </div>
+            <div class="input-cell">
+                <div class="val" th:text="${soilPhLabel}">—</div>
+                <div class="lbl">Soil Reaction</div>
+            </div>
+            <div class="input-cell">
+                <div class="val" th:text="${temperature} + ' °C'">0</div>
+                <div class="lbl">Temperature</div>
+            </div>
+            <div class="input-cell">
+                <div class="val" th:text="${humidityLabel}">—</div>
+                <div class="lbl">Humidity</div>
+            </div>
+            <div class="input-cell">
+                <div class="val" th:text="${rainfallLabel}">—</div>
+                <div class="lbl">Rainfall</div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="actions">
+            <a href="/predict" class="btn btn-primary">New Prediction</a>
+            <a href="/history" class="btn btn-secondary">View History</a>
+            <a href="/" class="btn btn-secondary">Dashboard</a>
+        </div>
+        <div class="saved-note">Record successfully persisted into the local database.</div>
+    </div>
 </div>
+
 </body>
 </html>

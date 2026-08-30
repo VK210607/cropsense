@@ -4,44 +4,271 @@
     <meta charset="UTF-8">
     <title>CropSense — Smart Crop Advisor</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #f0f7e6; display: flex; justify-content: center; padding: 40px; }
-        .card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 500px; }
-        h1 { color: #2d6a4f; text-align: center; }
-        label { display: block; margin-top: 15px; font-weight: bold; color: #333; }
-        input { width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
-        button { margin-top: 25px; width: 100%; padding: 12px; background: #2d6a4f; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
-        button:hover { background: #1b4332; }
-        p.hint { color: #888; font-size: 12px; margin-top: 3px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 50%, #40916c 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 50px 20px;
+        }
+
+        /* ── Hero Section ── */
+        .hero {
+            text-align: center;
+            margin-bottom: 50px;
+            color: white;
+        }
+        .hero .logo-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 72px;
+            height: 72px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            margin-bottom: 16px;
+            color: #b7e4c7;
+        }
+        .hero h1 {
+            font-size: 48px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.25);
+        }
+        .hero p {
+            font-size: 17px;
+            margin-top: 10px;
+            opacity: 0.9;
+            letter-spacing: 0.3px;
+        }
+        .hero .badge {
+            display: inline-block;
+            margin-top: 16px;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.25);
+            color: #e8f5e9;
+            padding: 6px 18px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        /* ── Stats Bar ── */
+        .stats-bar {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 14px;
+            padding: 14px 44px;
+            margin-bottom: 44px;
+            color: white;
+            font-size: 13px;
+            display: flex;
+            gap: 40px;
+            align-items: center;
+            backdrop-filter: blur(8px);
+        }
+        .stats-bar .stat { text-align: center; }
+        .stats-bar .stat strong { display: block; font-size: 22px; font-weight: 700; color: #d8f3dc; }
+        .stats-bar .divider { width: 1px; height: 28px; background: rgba(255,255,255,0.25); }
+
+        /* ── Module Cards Grid ── */
+        .modules-wrap {
+            width: 100%;
+            max-width: 800px;
+        }
+        .modules-title {
+            color: rgba(255,255,255,0.75);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 18px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            width: 100%;
+        }
+
+        /* ── Card Base ── */
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 32px 28px;
+            text-decoration: none;
+            color: inherit;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 16px 40px rgba(0,0,0,0.22);
+        }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+        }
+        .card.green::before  { background: linear-gradient(90deg, #2d6a4f, #52b788); }
+        .card.orange::before { background: linear-gradient(90deg, #d97706, #f59e0b); }
+
+        .card-icon-wrap {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 18px;
+        }
+        .card.green .card-icon-wrap { background: #e8f5e9; color: #2d6a4f; }
+        .card.orange .card-icon-wrap { background: #fef3c7; color: #b45309; }
+
+        .card h2 { font-size: 20px; color: #1b4332; margin-bottom: 10px; font-weight: 700; }
+        .card p  { font-size: 14px; color: #555; line-height: 1.6; flex-grow: 1; }
+
+        .card-footer {
+            margin-top: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .card-btn {
+            display: inline-block;
+            padding: 8px 18px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+        .btn-green  { background: #2d6a4f; color: white; }
+        .btn-orange { background: #d97706; color: white; }
+
+        .badge-live {
+            font-size: 11px;
+            background: #e8f5e9;
+            color: #2d6a4f;
+            border: 1px solid #a5d6a7;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .badge-live::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: #2d6a4f;
+            border-radius: 50%;
+        }
+
+        /* ── Footer ── */
+        .footer {
+            margin-top: 60px;
+            color: rgba(255,255,255,0.6);
+            font-size: 12px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
-<div class="card">
-    <h1>🌱 CropSense</h1>
-    <p style="text-align:center; color:#555;">Enter your soil & weather conditions below</p>
-    <form method="post" action="/predict">
-        <label>Nitrogen (N) kg/ha</label>
-        <input type="number" step="0.1" name="nitrogen" value="90" required>
 
-        <label>Phosphorus (P) kg/ha</label>
-        <input type="number" step="0.1" name="phosphorus" value="42" required>
-
-        <label>Potassium (K) kg/ha</label>
-        <input type="number" step="0.1" name="potassium" value="43" required>
-
-        <label>Temperature (°C)</label>
-        <input type="number" step="0.1" name="temperature" value="20.9" required>
-
-        <label>Humidity (%)</label>
-        <input type="number" step="0.1" name="humidity" value="82" required>
-
-        <label>Soil pH</label>
-        <input type="number" step="0.01" name="ph" value="6.5" required>
-
-        <label>Rainfall (mm)</label>
-        <input type="number" step="0.1" name="rainfall" value="202" required>
-
-        <button type="submit">🔍 Predict Best Crop</button>
-    </form>
+<!-- ── Hero ── -->
+<div class="hero">
+    <div class="logo-icon">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a10 10 0 0 1 10 10c0 5.523-4.477 10-10 10S2 17.523 2 12A10 10 0 0 1 12 2z"></path>
+            <path d="M12 6v12"></path>
+            <path d="M8 10l4-4 4 4"></path>
+            <path d="M8 14l4 4 4-4"></path>
+        </svg>
+    </div>
+    <h1>CropSense</h1>
+    <p>Digital Agronomist for intelligent crop recommendations based on soil and climate conditions.</p>
+    <span class="badge">Weka Random Forest Engine &bull; 22 Supported Crops &bull; 99.1% Model Accuracy</span>
 </div>
+
+<!-- ── Stats Bar ── -->
+<div class="stats-bar">
+    <div class="stat">
+        <strong>22</strong>
+        Crop Classes
+    </div>
+    <div class="divider"></div>
+    <div class="stat">
+        <strong>220</strong>
+        Training Records
+    </div>
+    <div class="divider"></div>
+    <div class="stat">
+        <strong>99.1%</strong>
+        Cross-Validation
+    </div>
+    <div class="divider"></div>
+    <div class="stat">
+        <strong th:text="${totalPredictions}">0</strong>
+        Logged Predictions
+    </div>
+</div>
+
+<!-- ── Module Cards ── -->
+<div class="modules-wrap">
+    <div class="modules-title">System Modules</div>
+    <div class="grid">
+
+        <!-- Module 1: Crop Predictor -->
+        <a href="/predict" class="card green">
+            <div class="card-icon-wrap">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"></path>
+                    <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"></path>
+                </svg>
+            </div>
+            <h2>Crop Predictor</h2>
+            <p>Select your field characteristics like soil colour, soil type, and local climate. Computes the optimal crop with real-time confidence scores.</p>
+            <div class="card-footer">
+                <span class="badge-live">Active</span>
+                <span class="card-btn btn-green">Launch &rarr;</span>
+            </div>
+        </a>
+
+        <!-- Module 2: Prediction History -->
+        <a href="/history" class="card orange">
+            <div class="card-icon-wrap">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 3v18h18"></path>
+                    <path d="M18 17V9"></path>
+                    <path d="M13 17V5"></path>
+                    <path d="M8 17v-3"></path>
+                </svg>
+            </div>
+            <h2>Prediction History</h2>
+            <p>Access historical records preserved in the embedded database. Review previously analyzed farm parameters and corresponding crop outputs.</p>
+            <div class="card-footer">
+                <span class="badge-live">Active</span>
+                <span class="card-btn btn-orange">View Records &rarr;</span>
+            </div>
+        </a>
+
+    </div>
+</div>
+
+<div class="footer">
+    CropSense &bull; 100% Java &bull; Spring Boot, Weka ML &amp; H2 Database
+</div>
+
 </body>
 </html>

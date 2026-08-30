@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>CropSense — Predict Crop</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 50%, #40916c 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+        .topbar {
+            width: 100%;
+            max-width: 680px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .topbar a {
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .topbar a:hover { color: white; }
+        .topbar .title {
+            margin: 0 auto;
+            color: white;
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 36px 40px;
+            width: 100%;
+            max-width: 680px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+        }
+        .card-header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .card-header h1 {
+            color: #1b4332;
+            font-size: 24px;
+            font-weight: 700;
+        }
+        .card-header p {
+            color: #666;
+            font-size: 14px;
+            margin-top: 6px;
+        }
+
+        /* Section divider */
+        .section-label {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #2d6a4f;
+            border-bottom: 1.5px solid #e8f5e9;
+            padding-bottom: 6px;
+            margin: 24px 0 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+        .section-label .hint {
+            font-size: 11px;
+            font-weight: 400;
+            text-transform: none;
+            color: #888;
+        }
+
+        /* Option Cards (Soil Color) */
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+        .color-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 14px 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            background: #fafafa;
+        }
+        .color-card:hover {
+            border-color: #2d6a4f;
+            background: #f0f7f4;
+        }
+        .color-card input[type="radio"] { display: none; }
+        .swatch {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            margin: 0 auto 8px auto;
+            border: 2px solid rgba(0,0,0,0.1);
+        }
+        .swatch.light { background-color: #e5d5b8; }
+        .swatch.medium { background-color: #8c5b32; }
+        .swatch.dark_brown { background-color: #4a2c11; }
+        .swatch.black { background-color: #1f2937; }
+
+        .color-card .name { font-size: 13px; color: #333; font-weight: 600; }
+        .color-card .desc { font-size: 11px; color: #777; margin-top: 2px; }
+
+        .color-card.active, .color-card:has(input:checked) {
+            border-color: #2d6a4f;
+            background: #e8f5e9;
+        }
+
+        /* Soil Type Grid */
+        .type-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+        }
+        .type-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 12px 6px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            background: #fafafa;
+        }
+        .type-card:hover {
+            border-color: #2d6a4f;
+            background: #f0f7f4;
+        }
+        .type-card input[type="radio"] { display: none; }
+        .type-card .name { font-size: 13px; color: #333; font-weight: 600; }
+        .type-card .desc { font-size: 11px; color: #777; margin-top: 3px; }
+        .type-card.active, .type-card:has(input:checked) {
+            border-color: #2d6a4f;
+            background: #e8f5e9;
+        }
+
+        /* pH Segmented Row */
+        .ph-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+        }
+        .ph-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 10px 4px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            background: #fafafa;
+        }
+        .ph-card:hover {
+            border-color: #2d6a4f;
+            background: #f0f7f4;
+        }
+        .ph-card input[type="radio"] { display: none; }
+        .ph-card .range { font-size: 11px; font-weight: 700; color: #2d6a4f; }
+        .ph-card .name { font-size: 12px; color: #444; font-weight: 600; margin-top: 2px; }
+        .ph-card.active, .ph-card:has(input:checked) {
+            border-color: #2d6a4f;
+            background: #e8f5e9;
+        }
+
+        /* Sliders */
+        .slider-wrap {
+            margin-bottom: 8px;
+        }
+        .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .slider-row input[type="range"] {
+            flex: 1;
+            accent-color: #2d6a4f;
+            height: 6px;
+            cursor: pointer;
+        }
+        .slider-badge {
+            background: #1b4332;
+            color: white;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 700;
+            min-width: 68px;
+            text-align: center;
+        }
+        .slider-scale {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #888;
+            margin-top: 6px;
+        }
+
+        /* Dropdowns */
+        .select-group {
+            display: flex;
+            flex-direction: column;
+        }
+        select {
+            width: 100%;
+            padding: 11px 14px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 14px;
+            color: #333;
+            background: white;
+            cursor: pointer;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        select:focus {
+            border-color: #2d6a4f;
+        }
+
+        /* Submit Button */
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(90deg, #1b4332, #2d6a4f);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 28px;
+            letter-spacing: 0.4px;
+            transition: opacity 0.2s;
+        }
+        .submit-btn:hover {
+            opacity: 0.92;
+        }
+    </style>
+</head>
+<body>
+
+<div class="topbar">
+    <a href="/">&larr; Back to Dashboard</a>
+    <span class="title">CropSense</span>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h1>Crop Recommendation Form</h1>
+        <p>Provide basic soil and climate observations for your farm field.</p>
+    </div>
+
+    <form method="post" action="/predict" id="predictForm">
+
+        <!-- ── Soil Color ── -->
+        <div class="section-label">
+            <span>Soil Colour</span>
+            <span class="hint">Select the closest match</span>
+        </div>
+        <div class="color-grid">
+            <label class="color-card">
+                <input type="radio" name="soilColor" value="light" required>
+                <div class="swatch light"></div>
+                <div class="name">Light</div>
+                <div class="desc">Sandy / Pale</div>
+            </label>
+            <label class="color-card">
+                <input type="radio" name="soilColor" value="medium">
+                <div class="swatch medium"></div>
+                <div class="name">Brown</div>
+                <div class="desc">Loamy / Mixed</div>
+            </label>
+            <label class="color-card">
+                <input type="radio" name="soilColor" value="dark_brown">
+                <div class="swatch dark_brown"></div>
+                <div class="name">Dark Brown</div>
+                <div class="desc">Organic-rich</div>
+            </label>
+            <label class="color-card">
+                <input type="radio" name="soilColor" value="black">
+                <div class="swatch black"></div>
+                <div class="name">Deep Black</div>
+                <div class="desc">Heavy Fertile</div>
+            </label>
+        </div>
+
+        <!-- ── Soil Type ── -->
+        <div class="section-label">
+            <span>Soil Texture &amp; Type</span>
+            <span class="hint">Based on physical composition</span>
+        </div>
+        <div class="type-grid">
+            <label class="type-card">
+                <input type="radio" name="soilType" value="sandy" required>
+                <div class="name">Sandy</div>
+                <div class="desc">Loose, drains fast</div>
+            </label>
+            <label class="type-card">
+                <input type="radio" name="soilType" value="loamy">
+                <div class="name">Loamy</div>
+                <div class="desc">Balanced soil</div>
+            </label>
+            <label class="type-card">
+                <input type="radio" name="soilType" value="clay">
+                <div class="name">Clay</div>
+                <div class="desc">Dense, holds water</div>
+            </label>
+            <label class="type-card">
+                <input type="radio" name="soilType" value="black_cotton">
+                <div class="name">Black Cotton</div>
+                <div class="desc">Regur soil</div>
+            </label>
+            <label class="type-card">
+                <input type="radio" name="soilType" value="red">
+                <div class="name">Red</div>
+                <div class="desc">Lateritic / Porous</div>
+            </label>
+        </div>
+
+        <!-- ── Soil pH ── -->
+        <div class="section-label">
+            <span>Soil Reaction (pH)</span>
+            <span class="hint">Acidity or alkalinity range</span>
+        </div>
+        <div class="ph-grid">
+            <label class="ph-card">
+                <input type="radio" name="soilPh" value="acidic" required>
+                <div class="range">&lt; 5.5</div>
+                <div class="name">Acidic</div>
+            </label>
+            <label class="ph-card">
+                <input type="radio" name="soilPh" value="slightly_acidic">
+                <div class="range">5.5 &ndash; 6.5</div>
+                <div class="name">Mildly Acidic</div>
+            </label>
+            <label class="ph-card">
+                <input type="radio" name="soilPh" value="neutral">
+                <div class="range">6.5 &ndash; 7.2</div>
+                <div class="name">Neutral</div>
+            </label>
+            <label class="ph-card">
+                <input type="radio" name="soilPh" value="slightly_alkaline">
+                <div class="range">7.3 &ndash; 8.0</div>
+                <div class="name">Mildly Alkaline</div>
+            </label>
+            <label class="ph-card">
+                <input type="radio" name="soilPh" value="alkaline">
+                <div class="range">&gt; 8.0</div>
+                <div class="name">Alkaline</div>
+            </label>
+        </div>
+
+        <!-- ── Temperature ── -->
+        <div class="section-label">
+            <span>Average Ambient Temperature</span>
+            <span class="hint">Typical growing season temperature</span>
+        </div>
+        <div class="slider-wrap">
+            <div class="slider-row">
+                <input type="range" name="temperature" id="tempSlider"
+                       min="10" max="43" step="0.5" value="25"
+                       oninput="document.getElementById('tempVal').textContent = this.value + ' °C'">
+                <div class="slider-badge" id="tempVal">25.0 °C</div>
+            </div>
+            <div class="slider-scale">
+                <span>Cool (10 °C)</span>
+                <span>Mild (25 °C)</span>
+                <span>Hot (43 °C)</span>
+            </div>
+        </div>
+
+        <!-- ── Humidity & Rainfall side by side ── -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 10px;">
+            <div class="select-group">
+                <div class="section-label" style="margin-top: 14px;">
+                    <span>Air Humidity</span>
+                </div>
+                <select name="humidityLevel" required>
+                    <option value="">Select humidity level</option>
+                    <option value="dry">Dry &bull; Below 40%</option>
+                    <option value="moderate">Moderate &bull; 40% &ndash; 65%</option>
+                    <option value="humid">Humid &bull; 65% &ndash; 85%</option>
+                    <option value="very_humid">Very Humid &bull; Above 85%</option>
+                </select>
+            </div>
+            <div class="select-group">
+                <div class="section-label" style="margin-top: 14px;">
+                    <span>Annual Rainfall</span>
+                </div>
+                <select name="rainfallLevel" required>
+                    <option value="">Select rainfall level</option>
+                    <option value="very_low">Very Low &bull; Arid (Below 50 mm)</option>
+                    <option value="low">Low &bull; Semi-arid (50 &ndash; 100 mm)</option>
+                    <option value="moderate">Moderate &bull; (100 &ndash; 180 mm)</option>
+                    <option value="high">High &bull; (180 &ndash; 240 mm)</option>
+                    <option value="very_high">Very Heavy &bull; (Above 240 mm)</option>
+                </select>
+            </div>
+        </div>
+
+        <button type="submit" class="submit-btn">Recommend Best Crop &rarr;</button>
+    </form>
+</div>
+
+<script>
+    // Radio button card styling support
+    document.querySelectorAll('input[type="radio"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            const group = this.name;
+            document.querySelectorAll(`input[name="${group}"]`).forEach(input => {
+                const parent = input.closest('label');
+                if (parent) parent.classList.remove('active');
+            });
+            const activeParent = this.closest('label');
+            if (activeParent) activeParent.classList.add('active');
+        });
+    });
+</script>
+</body>
+</html>

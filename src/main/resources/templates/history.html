@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>CropSense — Prediction History</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 50%, #40916c 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+        .topbar {
+            width: 100%;
+            max-width: 920px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .topbar a {
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .topbar a:hover { color: white; }
+        .topbar .title {
+            margin: 0 auto;
+            color: white;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .header-card {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            padding: 20px 28px;
+            width: 100%;
+            max-width: 920px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            color: white;
+            backdrop-filter: blur(8px);
+        }
+        .header-card h1 {
+            font-size: 20px;
+            font-weight: 700;
+        }
+        .header-card p {
+            font-size: 13px;
+            opacity: 0.8;
+            margin-top: 4px;
+        }
+        .total-badge {
+            background: #2d6a4f;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 6px 18px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* Table */
+        .table-wrap {
+            background: white;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 920px;
+            overflow: hidden;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        thead {
+            background: #1b4332;
+            color: white;
+        }
+        thead th {
+            padding: 14px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            text-align: center;
+        }
+        tbody tr {
+            border-bottom: 1px solid #f0f0f0;
+        }
+        tbody tr:hover {
+            background: #f8fffe;
+        }
+        tbody td {
+            padding: 12px 14px;
+            font-size: 13px;
+            color: #333;
+            text-align: center;
+        }
+        .crop-badge {
+            display: inline-block;
+            background: #e8f5e9;
+            color: #1b4332;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 13px;
+            text-transform: capitalize;
+        }
+        .id-cell {
+            color: #888;
+            font-size: 12px;
+        }
+
+        /* Empty state */
+        .empty {
+            text-align: center;
+            padding: 50px 20px;
+            color: #666;
+        }
+        .empty p {
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        /* Footer actions */
+        .footer-actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 12px;
+        }
+        .btn {
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            color: white;
+            transition: opacity 0.2s;
+        }
+        .btn-green {
+            background: #2d6a4f;
+        }
+        .btn-white {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .btn:hover {
+            opacity: 0.88;
+        }
+    </style>
+</head>
+<body>
+
+<div class="topbar">
+    <a href="/">&larr; Dashboard</a>
+    <span class="title">CropSense</span>
+</div>
+
+<!-- Header -->
+<div class="header-card">
+    <div>
+        <h1>Prediction History</h1>
+        <p>Logged crop predictions stored in the database.</p>
+    </div>
+    <div class="total-badge" th:text="${totalCount} + ' Records'">0 Records</div>
+</div>
+
+<!-- Table -->
+<div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Recommended Crop</th>
+                <th>Nitrogen</th>
+                <th>Phosphorus</th>
+                <th>Potassium</th>
+                <th>Temp (&deg;C)</th>
+                <th>Humidity %</th>
+                <th>pH</th>
+                <th>Rainfall (mm)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:if="${#lists.isEmpty(records)}">
+                <td colspan="9">
+                    <div class="empty">
+                        <p>No predictions recorded yet.</p>
+                        <a href="/predict" class="btn btn-green">Run First Prediction</a>
+                    </div>
+                </td>
+            </tr>
+            <tr th:each="r : ${records}">
+                <td class="id-cell" th:text="${r.id}">1</td>
+                <td><span class="crop-badge" th:text="${r.predictedCrop}">Crop</span></td>
+                <td th:text="${r.nitrogen}">0</td>
+                <td th:text="${r.phosphorus}">0</td>
+                <td th:text="${r.potassium}">0</td>
+                <td th:text="${r.temperature}">0</td>
+                <td th:text="${r.humidity}">0</td>
+                <td th:text="${r.ph}">0</td>
+                <td th:text="${r.rainfall}">0</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="footer-actions">
+    <a href="/predict" class="btn btn-green">New Prediction</a>
+    <a href="/" class="btn btn-white">Back to Dashboard</a>
+</div>
+
+</body>
+</html>
